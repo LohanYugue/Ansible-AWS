@@ -1,0 +1,14 @@
+- name: Gerando certificado SSL para o site estatico
+  shell: certbot --nginx --register-unsafely-without-email --agree-tos --domains site.desafio02lohan.tk
+
+
+- name: Gerando certificado SSL para o blog
+  shell: certbot --nginx --register-unsafely-without-email --agree-tos --domains blog.desafio02lohan.tk
+
+
+- name: Gerando certificado SSL para o tomcat
+  shell: certbot --nginx --register-unsafely-without-email --agree-tos --domains tomcat.desafio02lohan.tk
+
+
+#- name: Gerando certificado SSL para o magento
+#  shell: certbot --nginx --register-unsafely-without-email --agree-tos --domains loja-blog.desafio02lohan.tk

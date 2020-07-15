@@ -1,0 +1,12 @@
+---
+ - hosts: desafio02
+   become: yes
+   user: centos
+   roles:
+    - instalation
+    - nginx  
+    - wordpress
+    - magento   
+    - tomcat  
+    - certbot
+

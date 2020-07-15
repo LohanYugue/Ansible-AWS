@@ -1,0 +1,34 @@
+---
+# tasks file for wordpress
+
+- name: Criando base de dados com nome 'wordpress'
+  mysql_db:
+    name: wordpress
+    encoding: utf8mb4
+    state: present
+
+- name: Criando usuário da base com todos privilegios
+  mysql_user:
+    login_user: root
+    login_password:
+    name: admin
+    password: admin
+    priv: '*.*:ALL,GRANT'
+    state: present
+
+- name: Download Wordpress
+  get_url:
+     url: https://wordpress.org/latest.tar.gz
+     dest: /tmp/
+
+- name: Descompactando o Wordpress
+  unarchive:
+         src: /home/loham/playbooks/roles/wordpress/files/latest.tar.gz
+         dest: /var/www/html
+
+- name: Atribuindo nginx como owner do diretorio "/var/www/html/wordpress"
+  file:
+     path: /var/www/html/wordpress
+     owner: nginx
+     group: nginx
+     recurse: yes

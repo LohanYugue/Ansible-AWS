@@ -1,0 +1,69 @@
+- name: Instalando JAVA
+  yum:
+      name: java-1.8.0-openjdk-devel
+      state: present
+- name: Adicionando grupo tomcat
+  group:
+    name: tomcat
+- name: Adicionando usuário
+  user:
+    name: tomcat
+    group: tomcat
+    home: /opt/tomcat
+    system: yes
+- name: Download tomcat
+  get_url:
+    url: https://downloads.apache.org/tomcat/tomcat-9/v9.0.37/bin/apache-tomcat-9.0.37.tar.gz
+    dest: /opt/tomcat
+- name: Descompactar tomcat
+  unarchive:
+    src: /opt/tomcat/apache-tomcat-9.0.37.tar.gz
+    dest: /opt/tomcat
+    remote_src: yes
+- name: Permissão tomcat
+  file:
+    path: /opt/tomcat
+    owner: tomcat
+    group: tomcat
+    mode: '0777'
+    recurse: yes
+- name: Adicionando arquivo systemd tomcat
+  template:
+    src: tomcat.service.j2
+    dest: "/etc/systemd/system/tomcat.service"
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+- name: Restart tomcat
+  service:
+    name: tomcat
+    state: restarted
+- name: Alterações no user xml
+  replace:
+    path: /opt/tomcat/apache-tomcat-9.0.37/conf/tomcat-users.xml
+    regexp: '(<user username="tomcat" password="<must-be-changed>" roles="tomcat"/>)'
+    replace: '<user username="tomcat" password="admin58223" roles="tomcat"/>'
+- name: Excluindo arquivo tomcat contexto
+  file:
+    path: /opt/tomcat/apache-tomcat-9.0.37/webapps/manager/META-INF/context.xml
+    state: absent
+- name: Adicionando arquivo de contexto
+  template:
+    src: tomcat.context.j2
+    dest: "/opt/tomcat/apache-tomcat-9.0.37/webapps/manager/META-INF/context.xml"
+- name: Excluindo arquivo contexto 2
+  file:
+    path: /opt/tomcat/apache-tomcat-9.0.37/webapps/host-manager/META-INF/context.xml
+    state: absent
+- name: Adicionando arquivo contexto 2
+  template:
+    src: tomcat.context2.j2
+    dest: "/opt/tomcat/apache-tomcat-9.0.37/webapps/host-manager/META-INF/context.xml"
+- name: Restart tomcat
+  service:
+    name: tomcat
+    state: restarted
+- name: Restart nginx
+  service:
+      name: nginx
+      state: restarted

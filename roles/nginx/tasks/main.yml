@@ -1,0 +1,54 @@
+---
+# tasks file for nginx
+
+- name: Criando diretórios raiz dos sites
+  file: path={{item}} state=directory mode=0755 owner=nginx group=nginx
+  with_items:
+    - /var/www/html/magento
+    - /var/www/html/site
+
+- name: Copiando arq index do site estatico "index.php"
+  copy:
+     src: /home/loham/playbooks/roles/nginx/files/index.php
+     dest: /var/www/html/site
+
+- name: Copiando o arquivo de conf do nginx
+  copy:
+     src: /home/loham/playbooks/roles/nginx/files/nginx.cfg
+     dest: /etc/nginx/conf.d/desafio02lohan.tk.conf
+
+- name: Copiando o arquivo de conf do php-fpm "www.conf"
+  copy:
+     src: /home/loham/playbooks/roles/nginx/files/php-fpm.cfg
+     dest: /etc/php-fpm.d/www.conf
+
+- name: atribuindo o nginx ao diretorio "/var/lib/php"
+  file:
+      path: /var/lib/php
+      owner: nginx
+      group: nginx
+
+- name: Copiando arquivo "www.sock"
+  copy:
+     src: /home/loham/playbooks/roles/wordpress/files/www.sock
+     dest: /run/php-fpm/www.sock
+     owner: nginx
+     group: nginx
+
+- name: Reiniciando php-fpm
+  service:
+      name: php-fpm
+      state: restarted
+
+- name: Atribuindo nginx como owner do diretorio "/var/www/html/"
+  file:
+     path: /var/www/html/
+     owner: nginx
+     group: nginx
+
+- name: Copiando arquivo conf do SSL "options-ssl-nginx.conf"
+  copy:
+     src: /home/loham/playbooks/roles/nginx/files/options-ssl-nginx.conf
+     dest: /etc/letsencrypt/
+     owner: root
+     group: root

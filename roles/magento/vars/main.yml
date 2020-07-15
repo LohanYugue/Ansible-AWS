@@ -1,0 +1,35 @@
+---
+# vars file for magento
+
+magento_install: 'bin/magento setup:install \
+--base-url=http://loja-blog.desafio02lohan.tk/ \
+--db-host=localhost \
+--db-name=magento \
+--db-user=admin \
+--db-password=admin \
+--backend-frontname=admin \
+--admin-firstname=admin \
+--admin-lastname=admin \
+--admin-email="lohan.petermann@mandic.net.br" \
+--admin-user=admin \
+--admin-password=admin123 \
+--language=en_US \
+--currency=USD \
+--timezone=America/Chicago \
+--use-rewrites=1'
+
+base_url: http://loja-blog.desafio02lohan.tk
+db_host: localhost
+db_name: magento
+db_user: admin
+db_password: admin
+back_front: admin
+adm_first_name: admin
+adm_last_name: admin
+adm_email: lohanpetermann@gmail.com
+adm_user: admin
+adm_passwd: admin123
+language: en_US
+currency: USD
+timezone: America/Chicago
+use_rw: 1

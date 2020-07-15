@@ -1,0 +1,63 @@
+---
+# tasks file for tomcat
+
+- name: Download Tomcat 8
+  get_url:
+        url: https://downloads.apache.org/tomcat/tomcat-8/v8.5.57/bin/apache-tomcat-8.5.57.tar.gz
+        dest: /tmp
+
+- name: Extraindo arquivo do tomcat
+  unarchive:
+         src: /tmp/apache-tomcat-8.5.57.tar.gz
+         dest: /var/www/html/
+         remote_src: yes
+ 
+- name: Movendo arquivos para o diretório raiz do site tomcat
+  command: mv /var/www/html/apache-tomcat-8.5.57 /var/www/html/tomcat 
+#  args:
+#     chdir: /var/www/html/apache-tomcat-8.5.57/
+#     creates: /var/www/html/tomcat
+
+#- name: Movendo arquivos para o diretório raiz do site tomcat
+#  copy:
+#      src: /tmp/apache-tomcat-8.5.57/
+#      dest: /var/www/html/
+#      remote_src: yes
+
+
+- name: Atribuindo permissao de excecucao "bin/shutdown.sh"
+  file:
+     path: /var/www/html/tomcat/bin/shutdown.sh
+     mode: u+x
+
+- name: Atribuindo permissao de excecucao "bin/startup.sh"
+  file:
+     path: /var/www/html/tomcat/bin/startup.sh
+     mode: u+x
+
+- name: Criando link simbolico para subir o tomcat "tomcatstart"
+  file:
+     src: /var/www/html/tomcat/bin/startup.sh
+     dest: /usr/local/bin/tomcatstart
+     state: link
+
+- name: Criando link simbolico para desligar o tomcat "tomcatdown"
+  file:
+     src: /var/www/html/tomcat/bin/shutdown.sh
+     dest: /usr/local/bin/tomcatdown
+     state: link
+
+- name: Subindo o tomcat
+  command: /usr/local/bin/tomcatstart 
+
+- name: Atribuindo nginx a pasta do tomcat
+  file:
+     path: /var/www/html/tomcat
+     owner: nginx
+     group: nginx
+     recurse: yes
+
+- name: Reiniciando o nginx
+  service:
+        name: nginx
+        state: restarted

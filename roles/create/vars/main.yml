@@ -1,0 +1,10 @@
+---
+# vars file for create
+instance_type: t3a.medium
+security_group: desafio02lohan
+image: ami-01e36b7901e884a10
+keypair: chave_dedicados_lohan
+region: us-east-2
+domain: desafio02lohan.tk
+ttl: 3600
+count: 1

@@ -1,0 +1,161 @@
+---
+# tasks file for magento
+
+- name: Instalando php.
+  yum:
+    name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    state: present
+
+- name: Importando remi GPG key.
+  rpm_key:
+    key: http://rpms.remirepo.net/RPM-GPG-KEY-remi
+    state: present
+
+- name: Enable php72 repo
+  ini_file:
+    dest: /etc/yum.repos.d/remi-php72.repo
+    section: remi-php72
+    option: enabled
+    value: 1
+
+- name: Instalando php72
+  yum:
+    enablerepo: remi-php72
+    name: php
+    state: latest
+    update_cache: yes
+
+- name: Criando base de dados com nome 'magento'
+  mysql_db:
+    name: magento
+    encoding: utf8mb4
+    state: present
+
+- name: Criando usuário da base com todos privilegios
+  mysql_user:
+    login_user: root
+    login_password:
+    name: admin
+    password: admin
+    priv: '*.*:ALL,GRANT'
+    state: present
+
+- name: Instalar php zip
+  yum:
+    name: php-zip
+    state: latest
+    update_cache: yes
+
+- name: baixando o Composer     
+  get_url:
+       url:  https://getcomposer.org/installer 
+       dest: /tmp/
+
+- name: instalando composer
+  shell: cat /tmp/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  args:
+     creates: /usr/local/bin/composer
+
+- name: Renomeando composer.phar para composer
+  shell: mv /usr/local/bin/composer.phar /usr/local/bin/composer
+  args:
+     creates: /usr/local/bin/composer
+
+- name: Inserindo as credenciais do magento
+  shell: /usr/local/bin/composer config --global http-basic.repo.magento.com dd9669801a63ae32a4b4b11e0e850789 4c10029ee86d76136510c62d3388cb0f  
+
+- name: Criar projeto magento
+  shell: /usr/local/bin/composer create-project --repository=https://repo.magento.com/ magento/project-community-edition magento
+  args:
+     chdir: /var/www/html/
+     # creates: /var/www/html/magento/composer.json
+
+#- name: Criando um novo projeto Composer
+#  shell: "composer create-project --repository=https://repo.magento.com/ magento/project-community-edition magento"
+#  args:
+#     chdir: /var/www/html
+#     creates: /var/www/html/magento
+
+#- name: Installs package globally
+#  composer:
+#    command: require
+#    global_command: yes
+
+#- name: create composer project
+#  composer:
+#    command: create-project
+#    arguments: magento/project-community-edition magento
+#    no_scripts: no
+#    working_dir: /var/www/html
+#    prefer_dist: no
+
+- name: Dando permissao de read-write nos arquivos
+  shell: find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +
+  args:
+     chdir: /var/www/html/magento/
+
+- name: Dando permissao de read-write nos diretorios
+  shell: find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} +
+  args:
+     chdir: /var/www/html/magento/
+
+- name: Atribuindo permissao de excecucao "bin/magento"
+  file:
+     path: /var/www/html/magento/bin/magento
+     mode: u+x 
+
+#- name: Instalando Magento
+#  shell: "{{ magento_install }}"
+#  args:
+#     chdir: /var/www/html/magento/
+
+- name: Instalando Magento
+  shell: bin/magento setup:install \
+   --base-url="{{ base_url }}" \
+   --db-host="{{ db_host }}" \
+   --db-name="{{ db_name }}" \
+   --db-user="{{ db_user }}" \
+   --db-password="{{ db_password }}" \
+   --backend-frontname="{{ back_front }}" \
+   --admin-firstname="{{ adm_first_name }}" \
+   --admin-lastname="{{ adm_last_name }}" \
+   --admin-email="{{ adm_email }}" \
+   --admin-user="{ {adm_user }}" \
+   --admin-password="{{ adm_passwd }}" \
+   --language="{{ language }}" \
+   --currency="{{ currency }}" \
+   --timezone="{{ timezone }}" \
+   --use-rewrites="{{ use_rw }}"
+  args:
+     chdir: /var/www/html/magento/
+
+- name: Atribuindo nginx a pasta do magento
+  file:
+     path: /var/www/html/magento
+     owner: nginx
+     group: nginx
+     recurse: yes
+
+
+- name: Alterando para o modo de desenvolvedor do Magento
+  shell: ./magento deploy:mode:set developer
+  args:
+     chdir: /var/www/html/magento/bin/
+
+- name: Reiniciando php-fpm
+  service:
+       name: php-fpm
+       state: restarted
+
+- name: Reatribuindo permissoes no session do php
+  file:
+     path: /var/lib/php/session
+     owner: nginx
+     group: nginx
+     mode: '0777'
+
+- name: Reiniciando nginx
+  service:
+       name: nginx
+       state: restarted
+
